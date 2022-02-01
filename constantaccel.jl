@@ -3,18 +3,29 @@ using Random
 
 include("kalmanflt.jl")
 
-function get_measurement(
+function get_model_estimate(
     initial_state::Vector,
     measurement_time_sec)::Vector
 
     accel_ms2 = 9.8 # meter / sec / sec
+    model_estimate_vec = ([1.0 measurement_time_sec; 0.0 1.0] * initial_state
+                          - accel_ms2 * ([0.5 * measurement_time_sec^2 0; 0 measurement_time_sec] 
+                          * Vector([1., 1.])))
+    return model_estimate
+end
+
+function get_measurement(
+    initial_state::Vector,
+    measurement_time_sec)::Vector
+    """Get the next measurement
+    In a 'real' physical system, we would not need to simulate the measurement"""
+
+    model_estimate_vec = get_model_estimate(initial_state, measurement_time_sec)
     # Pseudo-measurement using classical physics calculation with noise
     position_noise_m = 7.5  # meter
     velocity_noise_ms = 0.15  # meter / sec
     noise_vector = Vector([position_noise_m * randn(1); velocity_noise_ms * randn(1)])
-    measurement::Vector = ([1.0 measurement_time_sec; 0.0 1.0] * initial_state
-                           - accel_ms2 * ([0.5 * measurement_time_sec^2 0; 0 measurement_time_sec] 
-                           * Vector([1., 1.]))) + noise_vector
+    measurement::Vector = model_estimate_vec + noise_vector
     return measurement
 
 end
@@ -33,12 +44,16 @@ function constantaccel()
     initial_state_cov = Diagonal([10.0^2, 0.1^2])
     initial_state = klstate{Float64}(initial_state_vector, initial_state_cov)
 
-    """The system is just a particle falling due to gravity with air resistance"""
+    """The system is just a particle falling due to gravity without air resistance"""
     state_transition_mat = [1.0 delta_time_s; 0.0 1.0]
     control_mat = [0.5 * delta_time_s ^ 2 0; 0 delta_time_s]
     external_input_vector = Vector([input_accel_ms2, input_accel_ms2])
     system_noise_mat = zeros(Float64, (2, 2))
     system = klsystem{Float64}(state_transition_mat, control_mat, system_noise_mat)
+
+    """Initialize the Kalman filter"""
+    obs_mat = [1.0 measurement_time_sec; 0.0 1.0]
+    measurementCov = Diagonal([10.0^2, 0.1^2])
 
     for step in 1:10
         time_s = step * delta_time_s
