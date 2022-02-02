@@ -1,7 +1,7 @@
 using LinearAlgebra
 
 
-mutable struct klobservation{T}
+mutable struct kfobservation{T}
 
     # Observation matrix
     obs::Matrix{T}
@@ -10,7 +10,7 @@ mutable struct klobservation{T}
 
 end
 
-mutable struct klsystem{T}
+mutable struct kfsystem{T}
 
     # State transition matrix
     transition::Matrix{T}
@@ -21,7 +21,7 @@ mutable struct klsystem{T}
 
 end
 
-mutable struct klstate{T}
+mutable struct kfstate{T}
     
     # State vector
     state::Vector{T}
@@ -32,23 +32,23 @@ end
 
 
 function extrapulate_state(
-    state::klstate,
-    system::klsystem,
-    input::Vector)::klstate
+    state::kfstate,
+    system::kfsystem,
+    input::Vector)::kfstate
     
     # Update the state vector
     updated_state_vec::Vector = system.transition * state.state + system.control * input
     updated_cov::Matrix = system.transition * state.cov * transpose(system.transition) 
                                 + system.noise * input
 
-    updated_state = klstate{eltype(updated_state_vec)}(updated_state_vec, updated_cov)
+    updated_state = kfstate{eltype(updated_state_vec)}(updated_state_vec, updated_cov)
     return updated_state
 end
 
 function update_state(
-    predicted_state::klstate,
-    current_filter::klobservation,
-    measurement::Vector)::klstate
+    predicted_state::kfstate,
+    current_filter::kfobservation,
+    measurement::Vector)::kfstate
 
     # Intermediate calculation (1)
     obs_transpose = transpose(current_filter.obs)
@@ -66,7 +66,7 @@ function update_state(
                          * (measurement - current_filter.obs * predicted_state.state))
     updated_cov = (transformation * predicted_state.cov * transpose(transformation)
                    + gain * current_filter.obsCov * transpose(gain))
-    updated_state = klstate{eltype(updated_state_vec)}(updated_state_vec, updated_cov)
+    updated_state = kfstate{eltype(updated_state_vec)}(updated_state_vec, updated_cov)
     
     return updated_state
 end

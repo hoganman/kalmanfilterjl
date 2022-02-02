@@ -44,21 +44,21 @@ function constantaccel()
     """
     initial_state_vector = Vector([1000.0, -0.001])
     initial_state_cov = Diagonal([10.0^2, 0.1^2])
-    initial_state = klstate{Float64}(initial_state_vector, initial_state_cov)
+    initial_state = kfstate{Float64}(initial_state_vector, initial_state_cov)
 
     """The system is just a particle falling due to gravity without air resistance"""
     state_transition_mat = [1.0 delta_time_s; 0.0 1.0]
     control_mat = [0.5 * delta_time_s^2 0; 0 delta_time_s]
     system_noise_mat = zeros(Float64, (2, 2))
     external_input_vector = -1 * Vector([accel_ms2, accel_ms2])
-    system = klsystem{Float64}(state_transition_mat, control_mat, system_noise_mat)
+    system = kfsystem{Float64}(state_transition_mat, control_mat, system_noise_mat)
 
     """Initialize the observation matrix. The measurement and state is one-to-one"""
     obs_mat = Diagonal([1.0, 1.0])
     obsCov = Diagonal([5.0^2, 0.25^2])
-    observations = klobservation{Float64}(obs_mat, obsCov)
+    observations = kfobservation{Float64}(obs_mat, obsCov)
 
-    next_state = klstate{Float64}(initial_state.state, initial_state.cov)
+    next_state = kfstate{Float64}(initial_state.state, initial_state.cov)
     for step in 1:100
         # At current time, get measurement
         time_s = step * delta_time_s
