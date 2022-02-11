@@ -4,12 +4,17 @@ using Random
 include("kalmanflt.jl")
 
 function get_velocity_infinity(temperature_K)
-    """v_inf between ~46 and ~54 meters / sec"""
+    """Get the velocity as time goes to infinity.
+    v_inf between ~46 and ~54 meters / sec
+
+    """
     return -0.1481 * temperature_K + 94.44
 end
 
 function get_temperature(altitude_m, vary_slope_by=0, vary_intercept_by=0)
-    """"""
+    """Get the temperature as a function of altitude
+
+    """
     slope = -0.006_835 # Kelvin / meter
     intercept = 288.706 # Kelvin
     if vary_slope_by > 0
@@ -26,6 +31,9 @@ function get_observation_mat(
     altitude_m,
     vary_temperature_slope_by=0,
     vary_temperature_intercept_by=0)::Matrix
+    """Get the observation matrix
+
+    """
     temperature_K = get_temperature(altitude_m, 
                                   vary_temperature_slope_by, 
                                   vary_temperature_intercept_by)
@@ -37,6 +45,9 @@ function get_control_mat(
     state_vec::Vector,
     total_time_sec,
     delta_time_sec)::Matrix
+    """Get the control matrix
+
+    """
 
     accel_ms2 = -9.8 # meter / sec^2
     temperature_K = get_temperature(state_vec[1])
@@ -46,8 +57,8 @@ function get_control_mat(
     current_jerk_ms3 = -2 * accel_ms2^2 / vel_inf_ms * sech(arg)^2 * tanh(arg)
     control_mat11 = (1. / factorial(2) * current_acceleration_ms2 * delta_time_sec^2
                      + 1. / factorial(3) * current_jerk_ms3 * delta_time_sec^3)
-    control_mat_12 = 0
-    control_mat_21 = 0
+    control_mat_12 = 0.
+    control_mat_21 = 0.
     control_mat_22 = -(current_acceleration_ms2 * delta_time_sec
                        + 1. / factorial(2) * current_jerk_ms3 * delta_time_sec^2)
     control_mat = [control_mat11 control_mat_12; control_mat_21 control_mat_22]
@@ -58,6 +69,9 @@ function get_model_estimate(
     state_vec::Vector,
     total_time_sec,
     delta_time_sec)::Vector
+    """Get the model estimate for current state
+
+    """
 
     state_transition = [1.0 -delta_time_sec; 0.0 1.0]
     control_mat = get_control_mat(state_vec, total_time_sec, delta_time_sec)
@@ -71,6 +85,9 @@ function get_measurement(
     true_state::Vector,
     vary_temperature_slope_by=0,
     vary_temperature_intercept_by=0)::Vector
+    """Get the simulated measurement as a function of the true state
+
+    """
     """Get the next measurement
     In a 'real' physical system, we would not need to simulate the measurement"""
 
@@ -86,7 +103,9 @@ function get_measurement(
 end
 
 function terminalvelocity()
+    """Simulate the experiment
 
+    """
     delta_time_s = 0.1
 
     """Use these two variables to simulate differences variations between the truth and observation
@@ -110,7 +129,9 @@ function terminalvelocity()
     system = kfsystem{Float64}(state_transition_mat, control_mat, system_noise_mat)
 
     """Initialize the observation matrix"""
-    obs_mat = get_observation_mat(initial_state.state[1], temperature_variation_slope, temperature_variation_intercept)
+    obs_mat = get_observation_mat(initial_state.state[1],
+                                  temperature_variation_slope,
+                                  temperature_variation_intercept)
     obsCov = 5.0^2 * I(1)  # Kelvin^2
     observations = kfobservation{Float64}(obs_mat, obsCov)
 
@@ -120,7 +141,9 @@ function terminalvelocity()
         # At current time, get measurement
         time_s = step * delta_time_s
         true_state_vector = get_model_estimate(true_state_vector, time_s, delta_time_s)
-        measurement_vec = get_measurement(true_state_vector, temperature_variation_slope, temperature_variation_intercept)
+        measurement_vec = get_measurement(true_state_vector,
+                                          temperature_variation_slope,
+                                          temperature_variation_intercept)
 
         # Predict the next state
         predicted_state = extrapulate_state(next_state, system, external_input_vector)
@@ -131,7 +154,9 @@ function terminalvelocity()
         # Update the system control and observation matrix for the next measurement
         new_control_mat = get_control_mat(next_state.state, time_s, delta_time_s)
         system.control = new_control_mat
-        new_observations_mat = get_observation_mat(next_state.state[1], temperature_variation_slope, temperature_variation_intercept)
+        new_observations_mat = get_observation_mat(next_state.state[1],
+                                                   temperature_variation_slope,
+                                                   temperature_variation_intercept)
         observations.obs = new_observations_mat
 
         println("The Kalman gain state is $(next_state.state)")
