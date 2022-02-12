@@ -49,7 +49,8 @@ function constantaccel()
     """The system is just a particle falling due to gravity without air resistance"""
     state_transition_mat = [1.0 delta_time_s; 0.0 1.0]
     control_mat = [0.5 * delta_time_s^2 0; 0 delta_time_s]
-    system_noise_mat = zeros(Float64, (2, 2))
+    system_noise_mat = [0.1  0.05;
+                        0.05 0.01]
     external_input_vector = -1 * Vector([accel_ms2, accel_ms2])
     system = kfsystem{Float64}(state_transition_mat, control_mat, system_noise_mat)
 
