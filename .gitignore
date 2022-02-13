@@ -6,4 +6,4 @@ deps/deps.jl
 
 *.idea
 *.vscode
-*.ipynb
+*.ipynb_check*
