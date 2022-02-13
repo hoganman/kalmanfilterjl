@@ -8,7 +8,7 @@
 
  ## Example: Falling Object Under Constant Acceleration
 
- A toy example of an object falling without air resistance is implemented in `constantaccel.jl`. The state vector is (h, hdot) where `h -> h + v t + 1/2 g t^2` and `hdot -> hdot + g t`. The measurement is (h, hdot) and so the observation matrix is the identity matrix.
+ A toy example of an object falling without air resistance is implemented in `constantaccel.jl`. The state vector is (h, hdot) where `h -> h + v t + 1/2 g t^2` and `hdot -> hdot + g t`. The measurement is (h, hdot) and so the observation matrix is the identity matrix. A Jupyter notebook is also available to visualize the results.
 
  ## Example: Falling Object Approaching Terminal Velocity
 
