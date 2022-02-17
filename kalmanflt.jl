@@ -80,9 +80,10 @@ function extrapulate_state(
     system::kfsystem,
     input::Vector)::kfstate
     # Update the state vector
-    updated_state_vec::Vector = system.transition * state.state + system.control * input
-    updated_cov::Matrix = system.transition * state.cov * transpose(system.transition)
-                                + system.noise * input
+    updated_state_vec::Vector = (system.transition * state.state 
+                                 + system.control * input)
+    updated_cov::Matrix = ((system.transition * state.cov 
+                           * transpose(system.transition)) + system.noise)
 
     updated_state = kfstate{eltype(updated_state_vec)}(updated_state_vec, updated_cov)
     return updated_state
@@ -106,7 +107,8 @@ See also [`extrapulate_state`](@ref)
 function update_state(
     predicted_state::kfstate,
     observation::kfobservation,
-    measurement::Vector)::kfstate
+    measurement::Vector
+)::kfstate
     # Intermediate calculation (1)
     obs_transpose = transpose(observation.obs)
 
