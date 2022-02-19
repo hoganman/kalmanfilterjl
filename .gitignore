@@ -7,3 +7,5 @@ deps/deps.jl
 *.idea
 *.vscode
 *.ipynb_check*
+
+.DS_STORE
