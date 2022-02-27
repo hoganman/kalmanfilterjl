@@ -2,7 +2,7 @@ using LinearAlgebra
 
 
 """
-    kfobservation{T}(obs, obsCov)
+    KalmanObservation{T}(obs, obsCov)
 
 The Kalman filter observation and covariance matrices
 
@@ -12,7 +12,7 @@ The Kalman filter observation and covariance matrices
 
 See also [`kfsystem`](@ref), [`kfstate`](@ref)
 """
-mutable struct kfobservation{T <: Real}
+mutable struct KalmanObservation{T <: Real}
 
     # Measurement vector
     meas::Vector{T}
@@ -23,14 +23,14 @@ mutable struct kfobservation{T <: Real}
 
 end
 
-kfobservation{T}(obs::Matrix{T}, obsCov::Matrix{T}) where {T<:Real} = kfobservation{T}(
+KalmanObservation{T}(obs::Matrix{T}, obsCov::Matrix{T}) where {T<:Real} = KalmanObservation{T}(
     zeros(T, size(obs)[1]), 
     obs,
     obsCov
 );
 
 """
-kfupdate{T}(transition, control, noise)
+    KalmanUpdate{T}(transition, control, noise)
 
 The Kalman filter transition, control, and noise covariance matrices, collectively the update matrices
 
@@ -41,7 +41,7 @@ The Kalman filter transition, control, and noise covariance matrices, collective
 
 See also [`kfobservation`](@ref), [`kfstate`](@ref)
 """
-struct kfupdate{T <: Real}
+struct KalmanUpdate{T <: Real}
     # State transition matrix
     transition::Matrix{T}
     # Control matrix
@@ -51,7 +51,7 @@ struct kfupdate{T <: Real}
 end
 
 """
-    kfstate{T}(state, cov)
+    KalmanState{T}(state, cov)
 
 The Kalman filter state vector and associated covariance matrix
 
@@ -61,7 +61,7 @@ The Kalman filter state vector and associated covariance matrix
 
 See also [`kfobservation`](@ref), [`kfsystem`](@ref)
 """
-struct kfstate{T <: Real}
+struct KalmanState{T <: Real}
     # State vector
     state::Vector{T}
     # Covariance matrix
@@ -86,18 +86,19 @@ Predict the next state vector and covariance
 See also [`update_state`](@ref)
 """
 function predict_state(
-    state::kfstate,
-    update_matrices::kfupdate,
+    state::KalmanState,
+    update_matrices::KalmanUpdate,
     external_input::Vector
-)::kfstate
+)::KalmanState
     # Update the state vector
-    updated_state_vec::Vector = (update_matrices.transition * state.state 
-                                 + update_matrices.control * external_input)
-    updated_state_cov::Matrix = ((update_matrices.transition * state.cov 
-                           * transpose(update_matrices.transition)) + update_matrices.noise)
+    pred_state_vec::Vector = (update_matrices.transition * state.state 
+                              + update_matrices.control * external_input)
+    pred_state_cov::Matrix = ((update_matrices.transition * state.cov 
+                               * transpose(update_matrices.transition)) 
+                               + update_matrices.noise)
 
-    updated_state = kfstate{eltype(updated_state_vec)}(updated_state_vec, updated_state_cov)
-    return updated_state
+    pred_state = KalmanState{eltype(pred_state_vec)}(pred_state_vec, pred_state_cov)
+    return pred_state
 end
 
 """
@@ -116,9 +117,9 @@ Update the current state estimate with a measurement
 See also [`extrapulate_state`](@ref)
 """
 function correct_state(
-    predicted_state::kfstate,
-    observation::kfobservation
-)::kfstate
+    predicted_state::KalmanState,
+    observation::KalmanObservation
+)::KalmanState
     # Intermediate calculation (1)
     obs_transpose = transpose(observation.obs)
 
@@ -135,7 +136,7 @@ function correct_state(
                          * (observation.meas - observation.obs * predicted_state.state))
     updated_cov = (transformation * predicted_state.cov * transpose(transformation)
                    + gain * observation.obsCov * transpose(gain))
-    updated_state = kfstate{eltype(updated_state_vec)}(updated_state_vec, updated_cov)
+    updated_state = KalmanState{eltype(updated_state_vec)}(updated_state_vec, updated_cov)
 
     return updated_state
-end
+end;
