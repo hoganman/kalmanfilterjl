@@ -29,6 +29,12 @@ KalmanObservation{T}(obs::Matrix{T}, obsCov::Matrix{T}) where {T<:Real} = Kalman
     obsCov
 );
 
+KalmanObservation{T}(meas::Vector{T}, obsCov::Matrix{T}) where {T<:Real} = KalmanObservation{T}(
+    meas, 
+    zeros(eltype(obsCov), size(obsCov)),
+    obsCov
+);
+
 """
     KalmanUpdate{T}(transition, control, noise)
 
@@ -132,11 +138,11 @@ function correct_state(
     transformation = (I(size(predicted_state.cov)[1]) - gain * observation.obs)
 
     # Update the state estimate and covariance
-    updated_state_vec = (predicted_state.state + gain
-                         * (observation.meas - observation.obs * predicted_state.state))
-    updated_cov = (transformation * predicted_state.cov * transpose(transformation)
-                   + gain * observation.obsCov * transpose(gain))
-    updated_state = KalmanState{eltype(updated_state_vec)}(updated_state_vec, updated_cov)
+    corr_state_vec = (predicted_state.state + gain
+                      * (observation.meas - observation.obs * predicted_state.state))
+    corr_cov = (transformation * predicted_state.cov * transpose(transformation)
+                + gain * observation.obsCov * transpose(gain))
+    corr_state = KalmanState{eltype(corr_state_vec)}(corr_state_vec, corr_cov)
 
-    return updated_state
+    return corr_state
 end;
