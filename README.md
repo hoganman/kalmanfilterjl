@@ -1,17 +1,18 @@
 # kalmanjl
  
- This is a simple Kalman filter implementation in Julia.
+ This is a Kalman filter implementation in Julia with examples.
 
  ## Requirements
 
- Julia 1.7 or at least Julia supporting the LinearAlgebra package.
+ * Julia 1.7
+ * SymPy
 
  ## Example: Falling Object Under Constant Acceleration
 
- A toy example of an object falling without air resistance is implemented in `constantaccel.jl`. The state vector is (h, hdot) where `h -> h + v t + 1/2 g t^2` and `hdot -> hdot + g t`. The measurement is (h, hdot) and so the observation matrix is the identity matrix. A Jupyter notebook is also available to visualize the results.
+ A toy example of an object falling without air resistance is demonstrated in `constantaccel.ipynb` notebook. The state vector is (h, hdot) where `h -> h + v t + 1/2 g t^2` and `hdot -> hdot + g t`. The measurement is (h, hdot) and so the observation matrix is the identity matrix.
 
- ## Example: Falling Object Approaching Terminal Velocity
+ ## Example: Falling Object With Terminal Velocity
 
- A toy example of an object falling air resistance is implemented in `terminalvelocity.jl`. The state vector is (h, hdot) like the previous example, however the state update equation must be modified. The velocity is modeled as `v -> v_inf tanh(g t / v_inf)` where `v_inf` is the velocity as time approaches infinity. The first and second deriviative of this function are used to update the state vector `h -> h + v t + 1/2 vdot t^2 + 1/3! vdotdot t^3` and `hdot -> hdot + vdot t + 1/2 vdotdot t^2`. The third-order derivatives are not included since they are very small comparitively.
+ A toy example of an object falling air resistance is demonstrated in the `terminalvelocity.ipynb`. The state vector is (h, hdot) like the previous example, however the state update equation must be modified. The velocity is modeled as `v -> v_inf tanh(g t / v_inf)` where `v_inf` is the velocity as time approaches infinity. This example uses the Extended Kalman Filter.
 
  Instead of measuring the position and velocity, which makes the observation matrix the identity, the temperature is measured instead. A temperature versus altitude model is implemented to map to truth.
