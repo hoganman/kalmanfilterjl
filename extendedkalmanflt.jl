@@ -96,9 +96,8 @@ function predict_state(
     noise_mat::Matrix
 )::KalmanState
 
-    index::Int
     eval_dict = model_vars
-    pred_state_vec = zeros(eltype(prev_state), size(state_vars_vec))
+    pred_state_vec = zeros(eltype(prev_state.state), size(state_vars_vec))
     for index in 1:length(state_vars_vec)
         key::Sym = state_vars_vec[index].prev_state_sym
         value = prev_state.state[index]
@@ -125,7 +124,6 @@ function correct_state(
     measurement::KalmanObservation
 )::KalmanState
 
-    index::Int
     eval_dict = model_vars
     for index in 1:length(state_vars_vec)
         key::Sym = state_vars_vec[index].prev_state_sym
@@ -145,7 +143,7 @@ function correct_state(
     meas_residual = zeros(eltype(measurement.meas), size(measurement.meas))
     for index in 1:length(obs_vars_vec)
         obs_var = obs_vars_vec[index]
-        obs_pred = obs_var.obs_func(obs_var.obs_fcn_variables...).subs(eval_dict).evalf()
+        obs_pred = obs_var.obs_func(obs_var.obs_func_syms...).subs(eval_dict).evalf()
         meas_residual[index] = measurement.meas[index] - obs_pred
     end
     residual_cov = (obs_matrix * pred_state.cov * transpose(obs_matrix)
