@@ -23,13 +23,19 @@ mutable struct KalmanObservation{T <: Real}
 
 end
 
-KalmanObservation{T}(obs::Matrix{T}, obsCov::Matrix{T}) where {T<:Real} = KalmanObservation{T}(
+KalmanObservation{T}(
+        obs::Matrix{T}, 
+        obsCov::Matrix{T}
+) where {T<:Real} = KalmanObservation{T}(
     zeros(T, size(obs)[1]), 
     obs,
     obsCov
 );
 
-KalmanObservation{T}(meas::Vector{T}, obsCov::Matrix{T}) where {T<:Real} = KalmanObservation{T}(
+KalmanObservation{T}(
+        meas::Vector{T}, 
+        obsCov::Matrix{T}
+) where {T<:Real} = KalmanObservation{T}(
     meas, 
     zeros(eltype(obsCov), size(obsCov)),
     obsCov
@@ -75,6 +81,11 @@ struct KalmanState{T <: Real}
 
 end
 
+KalmanState{T}(
+        ks::KalmanState
+) where {T<:Real} = begin
+    KalmanState(ks.state, ks.cov)
+end
 
 """
 predict_state(state, system, input)
@@ -92,9 +103,9 @@ Predict the next state vector and covariance
 See also [`update_state`](@ref)
 """
 function predict_state(
-    state::KalmanState,
-    update_matrices::KalmanUpdate,
-    external_input::Vector
+        state::KalmanState,
+        update_matrices::KalmanUpdate,
+        external_input::Vector
 )::KalmanState
     # Update the state vector
     pred_state_vec::Vector = (update_matrices.transition * state.state 
@@ -123,8 +134,8 @@ Update the current state estimate with a measurement
 See also [`extrapulate_state`](@ref)
 """
 function correct_state(
-    predicted_state::KalmanState,
-    observation::KalmanObservation
+        predicted_state::KalmanState,
+        observation::KalmanObservation
 )::KalmanState
     # Intermediate calculation (1)
     obs_transpose = transpose(observation.obs)
